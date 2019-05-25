@@ -1,0 +1,78 @@
+[client]
+socket={{ datadir }}/mysql.sock
+
+[mysqld]
+#General server parameters
+datadir = {{ datadir }}
+log_error={{ mysqld_error_log }}
+tmpdir= {{ tmpdir }}
+
+port = 3306
+server_id = {{ server_id }}
+socket={{ datadir  }}/mysql.sock
+pid_file={{ datadir  }}/mysqld.pid
+#bind_address=172.24.0.
+character_set_server='utf8'
+skip-name-resolve
+
+
+## InnoDB specific parameters
+innodb_buffer_pool_size = 2G
+innodb_file_per_table=ON
+innodb_flush_log_at_trx_commit=1
+innodb_log_file_size=128M
+innodb_flush_method=O_DIRECT
+
+## Transaction behavior
+autocommit=ON
+transaction-isolation=READ-COMMITTED
+
+
+#slow_query
+log_queries_not_using_indexes=1
+long_query_time=1
+slow_query_log=1
+
+
+## Memory sizes
+join_buffer_size     = 8M
+sort_buffer_size     = 8M
+read_rnd_buffer_size = 16M
+
+tmp_table_size       = 128M
+max_heap_table_size  = 128M
+
+
+## Miscellaneous parameters
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER
+default_storage_engine=InnoDB
+
+
+# max binlog keeps days
+expire_logs_days         = 7
+
+max_connections=300
+log_timestamps=system
+slave_net_timeout=3600
+## Enables binary logging
+relay_log={{ logdir }}/mysql-relay-bin.log
+max_relay_log_size=512M
+binlog_format=ROW
+log_bin={{ logdir }}/binlog.log
+max_binlog_size=512M
+master_info_repository = table
+relay_log_info_repository = table
+sync_binlog=1
+gtid_mode=ON
+log_slave_updates=ON
+enforce_gtid_consistency=ON
+plugin_load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+loose_rpl_semi_sync_master_enabled = 1
+loose_rpl_semi_sync_slave_enabled = 1
+loose_rpl_semi_sync_master_timeout = 5000
+## Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+{% if mysql_role == "slave" %}
+read_only=ON
+{% endif %}

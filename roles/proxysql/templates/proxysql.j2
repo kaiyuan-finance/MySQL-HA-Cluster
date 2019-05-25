@@ -1,0 +1,202 @@
+#!/bin/bash
+#
+# chkconfig: 345 99 01
+# description: High Performance and Advanced Proxy for MySQL and forks. \
+# It provides advanced features like connection pool, query routing and rewrite, \
+# firewalling, throttling, real time analysis, error-free failover
+### BEGIN INIT INFO
+# Provides:          proxysql
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: High Performance Advanced Proxy for MySQL
+# Description :      High Performance and Advanced Proxy for MySQL and forks.
+#                    It provides advanced features like connection pool, query routing and rewrite,
+#                    firewalling, throttling, real time analysis, error-free failover
+### END INIT INFO
+
+OLDDATADIR="/var/run/proxysql"
+DATADIR="{{ datadir }}"
+OPTS="-c /etc/proxysql.cnf -D $DATADIR"
+PIDFILE="$DATADIR/proxysql.pid"
+
+ulimit -n 102400
+ulimit -c 1073741824
+
+getpid() {
+  if [ -f $PIDFILE ]
+  then
+    if [ -r $PIDFILE ]
+    then
+      pid=`cat $PIDFILE`
+      if [ "X$pid" != "X" ]
+      then
+        # Verify that a process with this pid is still running.
+        pid=`ps -p $pid | grep $pid | grep -v grep | awk '{print $1}' | tail -1`
+        if [ "X$pid" = "X" ]
+        then
+          # This is a stale pid file.
+            rm -f $PIDFILE
+          echo "Removed stale pid file: $PIDFILE"
+        fi
+      fi
+    else
+      echo "Cannot read $PIDFILE."
+      exit 1
+    fi
+  fi
+}
+
+
+testpid() {
+    pid=`ps -p $pid | grep $pid | grep -v grep | awk '{print $1}' | tail -1`
+    if [ "X$pid" = "X" ]
+    then
+    # Process is gone so remove the pid file.
+        rm -f $PIDFILE
+    fi
+}
+
+initial() {
+    OPTS="--initial $OPTS"
+    start
+}
+
+reload() {
+    OPTS="--reload $OPTS"
+    start
+}
+
+start() {
+  echo -n "Starting ProxySQL: "
+    mkdir $DATADIR 2>/dev/null
+  getpid
+  if [ "X$pid" = "X" ]
+   then
+        if [ -f $OLDDATADIR/proxysql.db ]
+        then
+            if [ ! -f $DATADIR/proxysql.db ]
+            then
+                mv -iv $OLDDATADIR/proxysql.db $DATADIR/proxysql.db
+            fi
+        fi
+         proxysql $OPTS
+        if [ "$?" = "0" ]; then
+            echo "DONE!"
+            return 0
+        else
+            echo "FAILED!"
+            return 1
+        fi
+    else
+        echo "ProxySQL is already running."
+        exit 0
+    fi
+}
+
+stop() {
+  echo -n "Shutting down ProxySQL: "
+  getpid
+  if [ "X$pid" = "X" ]
+    then
+        echo "ProxySQL was not running."
+        exit 0
+    else
+        # Note: we send a kill to all the processes, not just to the child
+        for i in `pgrep -x proxysql` ; do
+            if [ "$i" != "$$" ]; then
+                kill $i
+            fi
+        done
+    #  Loop until it does.
+        savepid=$pid
+        CNT=0
+        TOTCNT=0
+        while [ "X$pid" != "X" ]
+        do
+            # Loop for up to 20 second
+            if [ "$TOTCNT" -lt "200" ]
+            then
+                if [ "$CNT" -lt "10" ]
+                then
+                    CNT=`expr $CNT + 1`
+                else
+                    echo -n "."
+                    CNT=0
+                fi
+                TOTCNT=`expr $TOTCNT + 1`
+
+                sleep 0.1
+
+                testpid
+            else
+                pid=
+            fi
+        done
+        pid=$savepid
+        testpid
+        if [ "X$pid" != "X" ]
+        then
+            echo
+            echo "Timed out waiting for ProxySQL to exit."
+            echo "  Attempting a forced exit..."
+            for i in `pgrep proxysql` ; do
+                if [ "$i" != "$$" ]; then
+                    kill -9 $i
+                fi
+            done
+        fi
+
+        pid=$savepid
+        testpid
+        if [ "X$pid" != "X" ]
+        then
+            echo "Failed to stop ProxySQL"
+            exit 1
+        else
+            echo "DONE!"
+        fi
+    fi
+}
+
+
+status() {
+  getpid
+  if [ "X$pid" = "X" ]
+  then
+        echo "ProxySQL is not running."
+        exit 1
+  else
+        echo "ProxySQL is running ($pid)."
+    exit 0
+  fi
+}
+
+case "$1" in
+    start)
+        start
+    ;;
+    initial)
+        initial
+    ;;
+    reload)
+        reload
+    ;;
+    stop)
+        stop
+    ;;
+    status)
+        status
+    ;;
+    restart)
+        stop
+        start
+    ;;
+    *)
+        echo "Usage: ProxySQL {start|stop|status|reload|restart|initial}"
+        exit 1
+    ;;
+esac
+exit $?
+

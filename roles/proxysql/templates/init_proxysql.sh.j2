@@ -1,0 +1,15 @@
+#!/bin/bash
+
+mysql_admin="mysql -uadmin -padmin -P6032 -h127.0.0.1"
+
+# configure proxysql
+$mysql_admin -e "set mysql-query_digests_lowercase='true';set mysql-default_sql_mode ='{{ mysql_sql_mode }}';"
+$mysql_admin -e "SET mysql-eventslog_filename='{{ logdir }}/queries.log';"
+$mysql_admin -e "set mysql-interfaces='0.0.0.0:{{ proxysql_client_port }}';"
+$mysql_admin -e "set mysql-forward_autocommit='true'; set mysql-monitor_slave_lag_when_null=30;"
+$mysql_admin -e "set mysql-wait_timeout=20000000 ;set mysql-verbose_query_error='true';set mysql-server_version='5.7.22';"
+
+$mysql_admin -e "SET mysql-monitor_username='{{ proxysql_monitor_user }}';set mysql-monitor_password='{{ proxysql_monitor_password }}';"
+
+  # persist mysql variables
+$mysql_admin -e "save mysql variables to disk;"

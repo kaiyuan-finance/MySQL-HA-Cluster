@@ -1,0 +1,26 @@
+# replace the PROJECT in this file with you real project name
+[server default]
+
+manager_workdir={{ mhadir }}/mha_PROJECT
+manager_log={{ mhadir }}/mha_PROJECT/mha_PROJECT.log
+
+secondary_check_script= masterha_secondary_check -s 192.0.16.12
+master_ip_failover_script={{ mhadir }}/mha_PROJECT/proxysql_failover.sh
+master_ip_online_change_script={{ mhadir }}/mha_PROJECT/proxysql_failover.sh
+
+#Make sure the replication account is correct
+repl_user=repl
+repl_password=repl444
+
+[server1]
+hostname=11.0.3.0
+candidate_master=1
+
+[server2]
+hostname=11.0.3.0
+no_master=1
+ignore_fail=1
+
+[server3]
+hostname=11.0.3.0
+candidate_master=1

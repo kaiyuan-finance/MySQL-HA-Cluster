@@ -1,0 +1,7 @@
+For centos6 perl 5.10
+install perl-DBD-MySQL-4.013-3.el6.x86_64.rpm
+compile and install ExtUtils-Constant-0.25.tar.gz 
+compile and install Socket-2.027.tar.gz
+complie and install v0.58_mha_node.tar.gz
+
+

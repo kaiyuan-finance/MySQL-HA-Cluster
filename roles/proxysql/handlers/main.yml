@@ -1,0 +1,5 @@
+- name: restart proxysql
+  service:
+      name: proxysql
+      state: restarted
+

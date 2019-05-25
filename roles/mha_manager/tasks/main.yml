@@ -1,0 +1,63 @@
+---
+- name: add mha user
+  user:
+      name: mha
+      group: mysql
+
+- name: create mha manager diretory
+  file:
+      path: '{{ item.dir }}'
+      state: directory
+      owner: mha
+      group: mysql
+      mode: 0755
+  with_items:
+      - { dir: "{{ mhadir }}" }
+      - { dir: "{{ mhadir }}/scripts" }
+      - { dir: "{{ mhadir }}/template" }
+
+- name: copy mha manager package to remote
+  copy:
+      src: mha_manager.tgz
+      dest: /tmp/
+      force: yes
+
+- name: tar xzf mha_manager.tgz
+  shell: tar xzf mha_manager.tgz
+  args:
+      chdir: /tmp/
+
+- name: install mha_manager
+  shell: /bin/bash install_mha_manager.sh >/tmp/install_mha_manager.log 2>&1
+  args:
+      chdir: /tmp/mha_manager
+
+- name: copy script files
+  copy:
+      src: '{{ item.file }}'
+      dest: '{{ mhadir }}/scripts/'
+      owner: mha
+      group: mysql
+      mode: 0755
+  with_items:
+      - { file: "report_script.sh" }
+      - { file: "shutdown_mysql.sh" }
+
+- name: copy template files
+  template:
+      src: '{{ item.file }}'
+      dest: '{{ item.dest }}'
+      mode: '{{ item.mode }}'
+      owner: mha
+      group: mysql
+      force: yes
+  with_items:
+      - { 'file': 'template/mha_project.cnf.j2', 'dest': '{{ mhadir  }}/template/mha_project.cnf','mode':'0644' }
+      - { 'file': 'template/auto_install.sh', 'dest': '{{ mhadir  }}/template/auto_install.sh','mode':'0644' }
+      - { 'file': 'template/check_status.sh', 'dest': '{{ mhadir  }}/template/check_status.sh', 'mode':'0755' }
+      - { 'file': 'template/mha_project.log', 'dest': '{{ mhadir  }}/template/mha_project.log','mode':'0644' }
+      - { 'file': 'template/proxysql_failover.sh', 'dest': '{{ mhadir  }}/template/proxysql_failover.sh', 'mode':'0755' }
+      - { 'file': 'template/start.sh', 'dest': '{{ mhadir  }}/template/start.sh' , 'mode':'0755'}
+      - { 'file': 'template/stop.sh', 'dest': '{{ mhadir  }}/template/stop.sh' , 'mode':'0755'}
+      - { 'file': 'template/switch_online.sh', 'dest': '{{ mhadir  }}/template/switch_online.sh' ,'mode':'0644'}
+      - { 'file': 'masterha_default.cnf.j2', 'dest': '/etc/masterha_default.cnf' ,'mode':'0644'}
