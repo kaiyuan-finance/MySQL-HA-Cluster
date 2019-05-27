@@ -27,3 +27,27 @@ proxysql的版本（proxysql_version）
 MHA manager的目录（mhadir），该目录中会有所有的项目，每个项目以一个文件夹的形式配置  
 MHA监控mysql server的账号及密码（mysql_mha_user、mysql_mha_password）  
 SSH账号（ssh_user）, **注意：各MHA node节点的SSH 公钥互信需要手工配置**  
+
+### 2. 部署
+2.1 部署整个集群
+部署整个集群可以运行一下代码，若想只部署某个部分，见2.2以后
+```
+ansible-playbook -i hosts.ini start_deploy.yml
+```
+2.2 只部署ProxySQL
+```
+ansible-playbook -i hosts.ini -t install-proxysql start_deploy.yml
+```
+2.3 只部署MySQL
+```
+ansible-playbook -i hosts.ini -t install-mysql start_deploy.yml
+```
+2.4 部署MHA node
+所有MySQL节点，以及MHA Manager都需要部署，此步骤应在安装MHA manager之前执行
+```
+ansible-playbook -i hosts.ini -t install-mha-node start_deploy.yml
+```
+2.5 部署MHA Manager
+```
+ansible-playbook -i hosts.ini -t install-mha-manager start_deploy.yml
+```
