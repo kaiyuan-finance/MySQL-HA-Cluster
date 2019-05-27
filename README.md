@@ -42,7 +42,7 @@ ansible-playbook -i hosts.ini -t install-proxysql start_deploy.yml
 ```
 ansible-playbook -i hosts.ini -t install-mysql start_deploy.yml
 ```
-2.4 部署MHA node
+2.4 部署MHA node  
 所有MySQL节点，以及MHA Manager都需要部署，此步骤应在安装MHA manager之前执行
 ```
 ansible-playbook -i hosts.ini -t install-mha-node start_deploy.yml
