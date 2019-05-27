@@ -4,7 +4,7 @@
 
 
 ## 部署步骤
-- 编辑文件hosts.ini
+### 1. 编辑文件hosts.ini  
 hosts.ini文件包含了所有的主机信息，是标准ansible inventory文件  
 
 [mysql_servers:vars]中定义了  
