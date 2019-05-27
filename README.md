@@ -28,6 +28,14 @@ MHA manager的目录（mhadir），该目录中会有所有的项目，每个项
 MHA监控mysql server的账号及密码（mysql_mha_user、mysql_mha_password）  
 SSH账号（ssh_user）, **注意：各MHA node节点的SSH 公钥互信需要手工配置**  
 
+在roles/mysql/defaults/main.yml中定义了几个默认变量，你也可以修改：
+```
+mysql_root_password: pass4.SQL
+mysqld_error_log: "{{ datadir }}/mysqld.err"
+mysql_repl_user: repl
+mysql_repl_password: repl
+```
+
 ### 2. 部署
 2.1 部署整个集群
 部署整个集群可以运行一下代码，若想只部署某个部分，见2.2以后
