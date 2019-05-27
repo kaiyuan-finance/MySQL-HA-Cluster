@@ -1,0 +1,47 @@
+---
+- name: add proxysql user
+  user:
+      name: proxysql
+
+- name: create data dir for proxysql
+  file:
+      path: "{{ item.dir }}"
+      state: directory
+      owner: proxysql
+      group: proxysql
+  with_items: 
+      - { dir: "{{ proxysql_datadir  }}" }
+      - { dir: "{{ proxysql_logdir  }}" }
+
+- name: install proxysql
+  yum: 
+     name: 'proxysql-{{ proxysql_version }}'
+     state: present
+
+- name: copy proxysql conf files ...
+  template:
+      src: "templates/proxysql.j2"
+      dest: /etc/rc.d/init.d/proxysql
+
+- name: reload systemd
+  become: true
+  shell: "systemctl daemon-reload"
+
+- name: start proxysql
+  service:
+      name: proxysql
+      state: started
+
+- name: copy init_proxysql.sh script
+  template:
+      src: templates/init_proxysql.sh.j2
+      dest: /tmp/init_proxysql.sh
+      mode: 755
+
+- name: run init script
+  shell: /bin/bash /tmp/init_proxysql.sh
+  notify:
+      - restart proxysql
+
+
+

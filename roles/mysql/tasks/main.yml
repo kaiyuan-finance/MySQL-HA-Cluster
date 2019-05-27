@@ -1,0 +1,101 @@
+---
+- name: add mysql user
+  user:
+      name: mysql
+
+- name: create mysql directories
+  file:
+    path: '{{ item.dir }}'
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0755
+  with_items:
+      - { dir: '{{ datadir  }}' }
+      - { dir: '{{ logdir  }}' }
+      - { dir: '{{ tmpdir  }}' }
+
+      #- name: download mysql repository
+      # get_url:
+      #url: "https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm"
+      #dest: "/tmp"
+
+- name: install repository
+  yum :
+    name: https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+    state: present
+
+- name: copy global my.cnf
+  template:
+    src: templates/my.cnf.j2
+    dest: /etc/my.cnf
+
+- name: copy my.cnf for root user
+  template:
+      src: templates/root_my_cnf.j2
+      dest: /root/.my.cnf
+
+- name: install mysql '{{ mysql_version  }}'
+  yum:
+    name: 'mysql-community-server-{{ mysql_version }}'
+    state: present
+    enablerepo: mysql57-community
+    disablerepo: mysql80-community
+
+- name: start mysql
+  service:
+      name: mysqld
+      state: started
+
+- name: Find temporary password
+  shell: >
+    echo `grep 'temporary.*root@localhost' "{{ mysqld_error_log  }}" | sed 's/.*root@localhost: //'`
+  register: mysql_root_password_temp
+  
+- name: Set new password for mysql root user
+  shell: >
+      mysql -NBe "alter user USER() identified  by '{{ mysql_root_password }}';"
+      --connect-expired-password -uroot -p'{{ mysql_root_password_temp.stdout }}'
+
+- name: uninstall validate_password plugin
+  shell: >
+      mysql -NBe "uninstall plugin validate_password" -uroot -p'{{ mysql_root_password  }}'
+
+- name : install MySQL-python
+  yum:
+      name: MySQL-python
+      state: latest
+  
+
+- name: create replication user
+  mysql_user:
+    name: "{{ mysql_repl_user }}"
+    host: "%"
+    password: "{{ mysql_repl_password }}"
+    priv: "*.*:REPLICATION SLAVE"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  when: mysql_role == "master"
+  tags: 
+    - create-repl-user
+
+- name: change master to 
+  mysql_replication:
+     mode: changemaster
+     master_host: "{{ master_ip.stdout }}"
+     master_user: repl
+     master_password: repl
+     master_auto_position: yes
+     login_user: root
+     login_password: "{{ mysql_root_password }}"
+  when: mysql_role == 'slave'
+
+- name: start slave
+  mysql_replication:
+     mode: startslave
+     login_user: root
+     login_password: "{{ mysql_root_password }}"
+  when: mysql_role == "slave"
+
+

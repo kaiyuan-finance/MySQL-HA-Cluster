@@ -1,0 +1,21 @@
+---
+- name: add mha user
+  user:
+      name: mha
+      group: mysql
+
+- name: copy mha_node to remote host
+  copy:
+      src: mha_node.tgz
+      dest: /tmp/
+      force: yes
+
+- name: tar -xvf file
+  shell: tar xzf mha_node.tgz
+  args:
+      chdir: /tmp/
+
+- name: install mha node
+  shell: /bin/bash install_node.sh > install_node.log 2>&1
+  args:
+      chdir: /tmp/mha_node

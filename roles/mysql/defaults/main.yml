@@ -1,0 +1,6 @@
+
+# due to the validate_plugin in mysql5.7, the root password needs to be a liitle complex
+mysql_root_password: pass4.SQL
+mysqld_error_log: "{{ datadir }}/mysqld.err"
+mysql_repl_user: repl
+mysql_repl_password: repl

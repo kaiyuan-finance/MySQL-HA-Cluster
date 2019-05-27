@@ -1,0 +1,9 @@
+[server default]
+user={{ mysql_mha_user }}
+password={{ mysql_mha_password }}
+ssh_user={{ ssh_user }}
+
+shutdown_script={{ mhadir }}/scripts/shutdown_mysql.sh
+report_script={{ mhadir }}/scripts/report_script.sh
+
+ping_interval=3

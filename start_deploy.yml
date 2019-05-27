@@ -1,0 +1,45 @@
+---
+- name: Install MySQL Replication Cluster
+  hosts: mysql_servers
+  remote_user: root
+  become: yes
+  pre_tasks: 
+     - name: register mysql master ip
+       shell: echo `hostname -I | cut -d' '  -f 1`
+       register: master_ip
+       when:  mysql_role == 'master'
+  tags: 
+     - install-mysql
+  roles:
+      - mysql
+
+- name: "Install ProxySQL"
+  hosts: proxysql_servers
+  remote_user: root
+  pre_tasks:
+      - name: install proxysql repo
+        copy: 
+           src: proxysql.repo
+           dest: /etc/yum.repos.d/proxysql.repo
+
+  tags:
+      - install-proxysql
+  roles:
+      - proxysql
+
+- name: Install MHA Node
+  hosts: mha_node_servers
+  remote_user: root
+
+  tags:
+      - install-mha-node
+  roles:
+      - mha_node
+
+- name: Install MHA Manager
+  hosts: mha_manager_servers
+  remote_user: root
+  tags:
+      - install-mha-manager
+  roles:
+      - mha_manager
