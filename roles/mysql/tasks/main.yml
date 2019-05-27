@@ -35,14 +35,12 @@
       src: templates/root_my_cnf.j2
       dest: /root/.my.cnf
 
-- name: install mysql 57
+- name: install mysql '{{ mysql_version  }}'
   yum:
-    name: mysql-server
-    state: latest
+    name: 'mysql-community-server-{{ mysql_version }}'
+    state: present
     enablerepo: mysql57-community
     disablerepo: mysql80-community
-  tags: 
-     - install-mysql
 
 - name: start mysql
   service:

@@ -17,7 +17,7 @@
 ### END INIT INFO
 
 OLDDATADIR="/var/run/proxysql"
-DATADIR="{{ datadir }}"
+DATADIR="{{ proxysql_datadir }}"
 OPTS="-c /etc/proxysql.cnf -D $DATADIR"
 PIDFILE="$DATADIR/proxysql.pid"
 

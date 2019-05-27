@@ -10,13 +10,13 @@
       owner: proxysql
       group: proxysql
   with_items: 
-      - { dir: "{{ datadir  }}" }
-      - { dir: "{{ logdir  }}" }
+      - { dir: "{{ proxysql_datadir  }}" }
+      - { dir: "{{ proxysql_logdir  }}" }
 
 - name: install proxysql
   yum: 
-     name: proxysql
-     state: latest
+     name: 'proxysql-{{ proxysql_version }}'
+     state: present
 
 - name: copy proxysql conf files ...
   template:
