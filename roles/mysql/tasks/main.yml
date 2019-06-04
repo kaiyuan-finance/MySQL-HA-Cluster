@@ -83,7 +83,7 @@
 - name: change master to 
   mysql_replication:
      mode: changemaster
-     master_host: "{{ master_ip.stdout }}"
+     master_host: "{{ master_ip }}"
      master_user: repl
      master_password: repl
      master_auto_position: yes
