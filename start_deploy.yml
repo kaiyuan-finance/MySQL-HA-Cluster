@@ -3,11 +3,7 @@
   hosts: mysql_servers
   remote_user: root
   become: yes
-  pre_tasks: 
-     - name: register mysql master ip
-       shell: echo `hostname -I | cut -d' '  -f 1`
-       register: master_ip
-       when:  mysql_role == 'master'
+
   tags: 
      - install-mysql
   roles:
