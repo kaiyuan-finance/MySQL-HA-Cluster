@@ -1,7 +1,8 @@
 # MySQL HA Cluster
 
 ## 部署架构
-
+最终部署架构如下：  
+![HA-img](https://github.com/kaiyuan-finance/MySQL-HA-Cluster/raw/dev/files/mysql-ha-cluster.png)
 
 ## 部署步骤
 ### 1. 编辑文件hosts.ini  
